@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo Application</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="todo.css">
+    
+</head>
+<body>
+    <div class="container">
+        <header class="text-center mb-4">
+            <h1>Todo</h1>
+            <h2 id="current-date"></h2>
+        </header>
+        <main>
+            <div class="input-group mb-3">
+                <input type="text" id="todo-input" class="form-control" placeholder="Add a new todo">
+                <div class="input-group-append">
+                    <button id="add-todo" class="btn btn-primary">+</button>
+                </div>
+            </div>
+            <button id="clear-all" class="btn btn-danger clear-btn">Clear All</button>
+            <ul id="todo-list" class="list-group border mt-3"></ul>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const dateElement = document.getElementById('current-date');
+            dateElement.innerText = new Date().toLocaleDateString("en-us", { 
+                weekday: "long", year: "numeric", month: "short", day: "numeric" 
+            });
+
+            const input = document.getElementById('todo-input');
+            const addButton = document.getElementById('add-todo');
+            const clearButton = document.getElementById('clear-all');
+            const todoList = document.getElementById('todo-list');
+
+            let todos = JSON.parse(localStorage.getItem('todos')) || [];
+
+            function renderTodos() {
+                todoList.innerHTML = '';
+                todos.forEach((todo, index) => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'list-group-item p-3';
+                    listItem.innerHTML = `
+                        <input class="form-check-input me-1" id="todo-${index}" type="checkbox" ${todo.completed ? 'checked' : ''}>
+                        <label class="form-check-label" for="todo-${index}">
+                            ${todo.completed ? '<strike>' + todo.text + '</strike>' : todo.text}
+                        </label>
+                    `;
+                    todoList.appendChild(listItem);
+
+                    listItem.querySelector('input').addEventListener('change', () => {
+                        todo.completed = !todo.completed;
+                        updateLocalStorage();
+                        renderTodos();
+                    });
+                });
+            }
+
+            function updateLocalStorage() {
+                localStorage.setItem('todos', JSON.stringify(todos));
+            }
+
+            addButton.addEventListener('click', () => {
+                const text = input.value.trim();
+                if (text) {
+                    todos.push({ text, completed: false });
+                    input.value = '';
+                    input.focus();
+                    updateLocalStorage();
+                    renderTodos();
+                }
+            });
+
+            input.addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
+                    addButton.click();
+                }
+            });
+
+            clearButton.addEventListener('click', () => {
+                todos = [];
+                updateLocalStorage();
+                renderTodos();
+            });
+
+            renderTodos();
+        });
+    </script>
+</body>
+</html>
